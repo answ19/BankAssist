@@ -1,14 +1,15 @@
 BankAssist
 An evidence-grounded banking customer-service assistant.
 
-Course: CECS 551 - Advanced Artificial Intelligence
-Team: TriNova
+# Course: CECS 551 - Advanced Artificial Intelligence
+# Team: TriNova
 Current phase: Phase 3 - Preliminary Data Analysis and Feasibility Analysis
-Overview
+# Overview
 BankAssist will classify customer banking questions and return a reviewed FAQ response. When confidence is low or no approved answer is available, it will recommend human assistance.
 Workflow
 Customer query → preprocessing → intent classification → confidence check → FAQ response or escalation.
-Team
+
+# Team
 Member	Responsibilities
 Anuja Sawant -	Preprocessing, shared data splits, baseline model and integration
 Sakshi Tejwani	- Architecture, FAQ lookup and confidence-based fallback
