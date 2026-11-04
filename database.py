@@ -106,10 +106,13 @@ def add_faq(intent, question, answer, source, approved=False, db_path=DB_PATH):
 
 
 def load_faqs_from_csv(csv_path, db_path=DB_PATH, known_intents=None):
-    """Insert FAQs from a CSV with intent, question, answer, source, approved columns.
+    """Insert or update FAQs from a CSV with intent, question, answer, source, approved.
 
-    When known_intents is given (e.g. the keys of label_mapping.json), every FAQ
-    intent must be one of them, so a typo cannot create an unreachable FAQ.
+    A row whose intent and question already exist updates that FAQ's answer, source,
+    and approval in place, so faq_ids (and requests that reference them) stay stable.
+    Every row is validated before anything is written. When known_intents is given
+    (e.g. the keys of label_mapping.json), every FAQ intent must be one of them, so a
+    typo cannot create an unreachable FAQ.
     """
     with Path(csv_path).open("r", encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle, strict=True))
@@ -125,14 +128,32 @@ def load_faqs_from_csv(csv_path, db_path=DB_PATH, known_intents=None):
                 ", ".join(unknown)))
     approved_values = {"1": True, "true": True, "yes": True,
                        "0": False, "false": False, "no": False}
-    ids = []
+    faqs = []
     for number, row in enumerate(rows, start=1):
         approved = approved_values.get(str(row["approved"]).strip().lower())
         if approved is None:
             raise ValueError("FAQ CSV record {} has an invalid approved value: {!r}".format(
                 number, row["approved"]))
-        ids.append(add_faq(row["intent"], row["question"], row["answer"],
-                           row["source"], approved, db_path))
+        faqs.append((require_text("intent", row["intent"]),
+                     require_text("question", row["question"]),
+                     require_text("answer", row["answer"]),
+                     require_text("source", row["source"]), int(approved)))
+    ids = []
+    with closing(connect(db_path)) as connection, connection:
+        for intent, question, answer, source, approved in faqs:
+            match = connection.execute(
+                "SELECT faq_id FROM faqs WHERE intent = ? AND question = ? "
+                "ORDER BY faq_id LIMIT 1", (intent, question)).fetchone()
+            if match:
+                connection.execute(
+                    "UPDATE faqs SET answer = ?, source = ?, approved = ? WHERE faq_id = ?",
+                    (answer, source, approved, match["faq_id"]))
+                ids.append(match["faq_id"])
+            else:
+                cursor = connection.execute(
+                    "INSERT INTO faqs (intent, question, answer, source, approved, created_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?)", (intent, question, answer, source, approved, now()))
+                ids.append(cursor.lastrowid)
     return ids
 
 

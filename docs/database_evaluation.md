@@ -128,6 +128,12 @@ py -3.11 -m venv .venv   # Python 3.11+ for the pinned versions; 3.14 was used h
 
 Read each row of `data/faq/faq_drafts.csv`. Set `approved` to 1 only when the answer is
 correct for the intent and safe to send, and change `source` to name the reviewer. Then
-run `setup_database.py --reset`. Note that `--reset` also clears logged requests and
-reviews, so export any evaluation results first. Intents without an approved FAQ always
+run `setup_database.py` (no `--reset`): FAQs are updated in place, matched by intent and
+question, and logged requests and reviews are kept. Intents without an approved FAQ always
 go to human review, whatever the confidence.
+
+Six FAQs are approved for the Phase 3 demo: `activate_my_card`, `card_arrival`,
+`compromised_card`, `declined_card_payment`, `lost_or_stolen_card`, and
+`lost_or_stolen_phone`. `pending_cash_withdrawal` was held back because its draft
+says the amount "is usually returned", a policy claim the team should confirm. The
+end-to-end demonstration is recorded in `docs/human_review_demo.md`.
