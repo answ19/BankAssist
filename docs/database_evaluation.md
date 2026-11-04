@@ -25,9 +25,11 @@ reviewer screen needs Streamlit (`requirements.txt`).
 - **faqs**: `faq_id, intent, question, answer, source, approved, created_at`. Only rows
   with `approved = 1` are ever retrieved.
 - **requests**: `request_id, query, predicted_intent, confidence_score, faq_id,
-  system_response, status, created_at`, plus four columns added for evaluation:
-  `true_intent` (gold label, when known), `model_name`, `model_runtime_ms`, and
-  `is_test_case` (1 for hand-entered scores; excluded from reported results by default).
+  system_response, status, created_at`, plus five columns added for evaluation:
+  `true_intent` (gold label, when known), `model_name`, `model_runtime_ms` (classifier
+  prediction time only), `ollama_runtime_ms` (local LLM response time, tracked
+  separately), and `is_test_case` (1 for hand-entered scores; excluded from reported
+  results by default). `initialize_database` adds missing columns to older databases.
 - **reviews**: `review_id, request_id, decision, corrected_intent, final_response,
   reviewer_notes, reviewed_at`. One review per request.
 
@@ -83,12 +85,20 @@ scores (0.95, 0.90, 0.82, 0.65, plus an out-of-scope query at 0.40) and placehol
 answers. All of its rows are marked `is_test_case = 1`. They test the routing and review
 code only and are not model results or evidence that the confidence score is calibrated.
 
-## Provisional decisions (made without team input; open to change)
+## Integration decisions
 
-The team had not yet supplied these, so the following were chosen to unblock
-integration. Each is isolated in one place so it can be swapped.
+These were first chosen to unblock integration, then confirmed by Anuja: the
+prediction fields, the confidence definition (highest class probability, top three
+intents), evaluating 0.90 on validation data, drafts staying at `approved = 0`, human
+review for any query without an approved FAQ, and `qwen2.5:3b`. The confidence score
+measures confidence in the predicted intent, not the correctness of an answer. The
+routing result also returns `faq_answer` and `status` for storage.
 
-| Item | Provisional choice | Where |
+Ownership going forward: Anuja owns baseline training and shares the saved model and
+validation predictions for evaluation; Sakshi coordinates FAQ review and the Ollama
+integration. A small set of FAQs is reviewed first for the demonstration.
+
+| Item | Choice | Where |
 |---|---|---|
 | Prediction output | `query, predicted_intent, confidence_score, top_intents, model_name, model_runtime_ms` | `classifier.predict` |
 | Confidence score | Largest class probability of TF-IDF + Logistic Regression (`predict_proba`) | `classifier.py` |
@@ -96,8 +106,9 @@ integration. Each is isolated in one place so it can be swapped.
 | FAQ file | 77 drafts, one per intent, all `approved = 0` until a team member reviews them | `data/faq/faq_drafts.csv` |
 | Ollama model | `qwen2.5:3b` (about 2 GB; fits CPU-only on a 16 GB laptop) | `ollama_trial.py`, `OLLAMA_MODEL` |
 
-The baseline was built because no shared classifier existed yet. If Anuja's baseline or
-Suraj's DistilBERT replaces it, only `classifier.predict` must keep the same output keys.
+The baseline here was built because no shared classifier existed yet; it is offered to
+Anuja for review and reuse. If her retrained model or Suraj's DistilBERT replaces it,
+only `classifier.predict` must keep the same output keys.
 
 ## Full workflow
 

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS requests (
     true_intent TEXT,
     model_name TEXT,
     model_runtime_ms REAL,
+    ollama_runtime_ms REAL,
     is_test_case INTEGER NOT NULL DEFAULT 0 CHECK (is_test_case IN (0, 1)),
     created_at TEXT NOT NULL
 );
@@ -86,6 +87,10 @@ def require_text(name, value):
 def initialize_database(db_path=DB_PATH):
     with closing(connect(db_path)) as connection, connection:
         connection.executescript(SCHEMA)
+        # Databases created before ollama_runtime_ms existed gain the column here.
+        columns = {row["name"] for row in connection.execute("PRAGMA table_info(requests)")}
+        if "ollama_runtime_ms" not in columns:
+            connection.execute("ALTER TABLE requests ADD COLUMN ollama_runtime_ms REAL")
 
 
 def add_faq(intent, question, answer, source, approved=False, db_path=DB_PATH):
@@ -142,10 +147,11 @@ def get_faq_by_intent(intent, db_path=DB_PATH):
 
 def save_request(query, predicted_intent, confidence_score, faq_id, system_response,
                  status, true_intent=None, model_name=None, model_runtime_ms=None,
-                 is_test_case=False, db_path=DB_PATH):
+                 ollama_runtime_ms=None, is_test_case=False, db_path=DB_PATH):
     """Log one routed request and return its request_id.
 
-    is_test_case marks hand-entered scores used to exercise the routing code, so
+    model_runtime_ms is classifier prediction time only; ollama_runtime_ms is the
+    local LLM response time, kept separate. is_test_case marks hand-entered scores used to exercise the routing code, so
     they can be kept out of reported model results.
     """
     if status not in REQUEST_STATUSES:
@@ -153,12 +159,13 @@ def save_request(query, predicted_intent, confidence_score, faq_id, system_respo
     values = (require_text("query", query), blank_to_none(predicted_intent),
               confidence_score, faq_id, system_response, status,
               blank_to_none(true_intent), blank_to_none(model_name),
-              model_runtime_ms, int(bool(is_test_case)), now())
+              model_runtime_ms, ollama_runtime_ms, int(bool(is_test_case)), now())
     with closing(connect(db_path)) as connection, connection:
         cursor = connection.execute(
             "INSERT INTO requests (query, predicted_intent, confidence_score, faq_id, "
             "system_response, status, true_intent, model_name, model_runtime_ms, "
-            "is_test_case, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", values)
+            "ollama_runtime_ms, is_test_case, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", values)
         return cursor.lastrowid
 
 
