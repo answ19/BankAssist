@@ -178,6 +178,7 @@ def evaluate_records(records, labels=None):
             [r["predicted_intent"] for r in labelled], labels),
         "review": review_metrics(records),
         "model_runtime": runtime_summary(r["model_runtime_ms"] for r in records),
+        "ollama_runtime": runtime_summary(r.get("ollama_runtime_ms") for r in records),
     }
 
 
@@ -193,6 +194,7 @@ def format_evaluation_table(results, faq_lookup=None):
     classification = results["classification"] or {}
     review = results["review"]
     runtime = results["model_runtime"] or {}
+    ollama = results["ollama_runtime"] or {}
     lookup = faq_lookup or {}
     rows = [
         ("Accuracy", fmt(classification.get("accuracy")),
@@ -211,8 +213,12 @@ def format_evaluation_table(results, faq_lookup=None):
         ("Rejection rate", fmt(review["rejection_rate"]), "Rejected reviews divided by all reviews"),
         ("Reviewer agreement", fmt(review["reviewer_agreement"]),
          "Reviews keeping the predicted intent (n={})".format(review["agreement_reviews"])),
-        ("Average model response time", fmt(runtime.get("mean_ms"), "ms"),
-         "Mean logged model runtime per query (n={})".format(runtime.get("count", 0))),
+        ("Average classifier time", fmt(runtime.get("mean_ms"), "ms"),
+         "Mean logged classifier prediction time per query (n={})".format(
+             runtime.get("count", 0))),
+        ("Average Ollama response time", fmt(ollama.get("mean_ms"), "ms"),
+         "Mean logged local LLM response time per query (n={})".format(
+             ollama.get("count", 0))),
         ("Average FAQ lookup time", fmt(lookup.get("mean_ms"), "ms"),
          "Mean SQLite FAQ lookup time (n={})".format(lookup.get("count", 0))),
     ]

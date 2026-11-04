@@ -30,6 +30,7 @@ class RoutingTests(unittest.TestCase):
                 result = self.route(score)
                 self.assertEqual(result["status"], status)
                 self.assertEqual(result["faq_id"], self.faq_id)
+                self.assertEqual(result["faq_answer"], "Approved answer")
                 expected = ("Approved answer" if status == "answered"
                             else routing.ESCALATION_MESSAGE)
                 self.assertEqual(result["system_response"], expected)
@@ -48,6 +49,7 @@ class RoutingTests(unittest.TestCase):
         result = self.route(0.99, intent="terminate_account")
         self.assertEqual(result["status"], "pending_review")
         self.assertIsNone(result["faq_id"])
+        self.assertIsNone(result["faq_answer"])
         self.assertEqual(self.route(0.99, intent=None)["status"], "pending_review")
 
     def test_threshold_is_configurable(self):

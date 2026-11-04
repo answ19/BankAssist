@@ -29,13 +29,16 @@ def check_probability(name, value):
 
 def route_query(query, predicted_intent, confidence_score, threshold=None,
                 true_intent=None, model_name=None, model_runtime_ms=None,
-                is_test_case=False, db_path=database.DB_PATH):
+                ollama_runtime_ms=None, is_test_case=False, db_path=database.DB_PATH):
     """Save the request and return it in the shared prediction-output format.
 
     The request is answered automatically only when the confidence reaches the
     threshold and an approved FAQ exists for the predicted intent. Otherwise it
     is saved as pending_review; any FAQ found is kept as evidence for the reviewer
     but is not shown to the customer.
+
+    The confidence score measures confidence in the predicted intent, not the
+    correctness of any answer text.
     """
     threshold = check_probability(
         "threshold", CONFIDENCE_THRESHOLD if threshold is None else threshold)
@@ -49,13 +52,15 @@ def route_query(query, predicted_intent, confidence_score, threshold=None,
     request_id = database.save_request(
         query, predicted_intent, confidence_score, faq_id, system_response, status,
         true_intent=true_intent, model_name=model_name,
-        model_runtime_ms=model_runtime_ms, is_test_case=is_test_case, db_path=db_path)
+        model_runtime_ms=model_runtime_ms, ollama_runtime_ms=ollama_runtime_ms,
+        is_test_case=is_test_case, db_path=db_path)
     return {
         "request_id": request_id,
         "query": query,
         "predicted_intent": predicted_intent,
         "confidence_score": confidence_score,
         "faq_id": faq_id,
+        "faq_answer": faq["answer"] if faq else None,
         "system_response": system_response,
         "status": status,
     }

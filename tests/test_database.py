@@ -29,6 +29,27 @@ class DatabaseTests(unittest.TestCase):
                 "SELECT name FROM sqlite_master WHERE type = 'table'")}
         self.assertTrue({"faqs", "requests", "reviews"} <= tables)
 
+    def test_older_databases_gain_the_ollama_runtime_column(self):
+        old = Path(self.directory.name) / "old.db"
+        previous_schema = database.SCHEMA.replace("    ollama_runtime_ms REAL,\n", "")
+        self.assertNotIn("ollama_runtime_ms", previous_schema)
+        with closing(sqlite3.connect(str(old))) as connection, connection:
+            connection.executescript(previous_schema)
+            connection.execute("INSERT INTO requests (query, status, created_at) "
+                               "VALUES ('kept', 'pending_review', 'then')")
+        database.initialize_database(old)
+        with closing(sqlite3.connect(str(old))) as connection:
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(requests)")}
+            rows = connection.execute("SELECT query FROM requests").fetchall()
+        self.assertIn("ollama_runtime_ms", columns)
+        self.assertEqual(rows, [("kept",)])
+
+    def test_classifier_and_ollama_runtimes_are_stored_separately(self):
+        database.save_request("Q", "a", 0.5, None, None, "pending_review",
+                              model_runtime_ms=2.0, ollama_runtime_ms=900.0, db_path=self.db)
+        saved = database.get_evaluation_records(db_path=self.db)[0]
+        self.assertEqual((saved["model_runtime_ms"], saved["ollama_runtime_ms"]), (2.0, 900.0))
+
     def test_only_approved_faqs_are_retrieved(self):
         database.add_faq("card_arrival", "Q draft", "A draft", "draft", False, self.db)
         self.assertIsNone(database.get_faq_by_intent("card_arrival", self.db))
