@@ -3,6 +3,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 import database
@@ -23,7 +24,7 @@ class DatabaseTests(unittest.TestCase):
 
     def test_initialize_is_repeatable(self):
         database.initialize_database(self.db)
-        with sqlite3.connect(str(self.db)) as connection:
+        with closing(sqlite3.connect(str(self.db))) as connection:
             tables = {row[0] for row in connection.execute(
                 "SELECT name FROM sqlite_master WHERE type = 'table'")}
         self.assertTrue({"faqs", "requests", "reviews"} <= tables)

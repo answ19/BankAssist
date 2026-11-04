@@ -41,6 +41,29 @@ class EvaluationTests(unittest.TestCase):
         self.assertAlmostEqual(evaluation.recall_at_k([1, 5, 10], ranked, 1), 1 / 3)
         self.assertAlmostEqual(evaluation.recall_at_k([1, 5, 10], ranked, 3), 2 / 3)
 
+    def test_threshold_sweep(self):
+        rows = evaluation.threshold_sweep([0.95, 0.9, 0.82, 0.65], [True, False, True, False],
+                                          [0.9, 0.5, 0.99])
+        self.assertEqual(rows[0]["automatic_rate"], 0.5)
+        self.assertEqual(rows[0]["automatic_accuracy"], 0.5)
+        self.assertEqual(rows[0]["wrong_automatic_answers"], 1)
+        self.assertEqual(rows[0]["escalated_accuracy"], 0.5)
+        self.assertEqual(rows[1]["escalated"], 0)
+        self.assertIsNone(rows[1]["escalated_accuracy"])
+        self.assertIsNone(rows[2]["automatic_accuracy"])
+
+    def test_calibration_bins(self):
+        result = evaluation.calibration_bins([0.95, 0.95, 0.15, 1.0], [True, False, False, True])
+        self.assertEqual([(row["low"], row["count"]) for row in result["bins"]],
+                         [(0.1, 1), (0.9, 3)])
+        # |2/3 - 0.9667| * 3/4 + |0 - 0.15| * 1/4
+        self.assertAlmostEqual(result["ece"], 0.3 * 0.75 + 0.15 * 0.25)
+        self.assertIsNone(evaluation.calibration_bins([], []))
+
+    def test_top_confusions(self):
+        metrics = evaluation.classification_metrics(["a", "a", "b", "c"], ["b", "b", "a", "c"])
+        self.assertEqual(evaluation.top_confusions(metrics), [(2, "a", "b"), (1, "b", "a")])
+
     def test_review_metrics(self):
         records = [
             record("answered"),

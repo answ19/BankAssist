@@ -68,6 +68,59 @@ def recall_at_k(relevant_ids, ranked_ids, k):
     return sum(rel in ranked[:k] for rel, ranked in zip(relevant_ids, ranked_ids)) / len(relevant_ids)
 
 
+def threshold_sweep(confidences, correct, thresholds):
+    """For each threshold: share answered automatically and accuracy on each side.
+
+    correct[i] says whether prediction i matched the true intent. This shows the
+    trade-off between automatic coverage and wrong automatic answers.
+    """
+    if len(confidences) != len(correct):
+        raise ValueError("confidences and correct have different lengths.")
+    rows = []
+    for threshold in thresholds:
+        answered = [ok for score, ok in zip(confidences, correct) if score >= threshold]
+        escalated = [ok for score, ok in zip(confidences, correct) if score < threshold]
+        rows.append({
+            "threshold": threshold,
+            "automatic_rate": safe_divide(len(answered), len(correct)),
+            "automatic_accuracy": safe_divide(sum(answered), len(answered)),
+            "wrong_automatic_answers": len(answered) - sum(answered),
+            "escalated": len(escalated),
+            "escalated_accuracy": safe_divide(sum(escalated), len(escalated)),
+        })
+    return rows
+
+
+def calibration_bins(confidences, correct, bins=10):
+    """Reliability table and expected calibration error (ECE) over equal-width bins."""
+    if len(confidences) != len(correct):
+        raise ValueError("confidences and correct have different lengths.")
+    if not confidences:
+        return None
+    groups = [[] for _ in range(bins)]
+    for score, ok in zip(confidences, correct):
+        groups[min(int(score * bins), bins - 1)].append((score, ok))
+    rows, ece = [], 0.0
+    for number, group in enumerate(groups):
+        if not group:
+            continue
+        mean_confidence = sum(score for score, _ in group) / len(group)
+        accuracy = sum(ok for _, ok in group) / len(group)
+        ece += len(group) / len(confidences) * abs(accuracy - mean_confidence)
+        rows.append({"low": number / bins, "high": (number + 1) / bins, "count": len(group),
+                     "mean_confidence": mean_confidence, "accuracy": accuracy})
+    return {"bins": rows, "ece": ece}
+
+
+def top_confusions(metrics, limit=10):
+    """Most frequent (true intent, predicted intent) errors from classification_metrics."""
+    labels, matrix = metrics["labels"], metrics["confusion_matrix"]
+    pairs = [(matrix[i][j], labels[i], labels[j])
+             for i in range(len(labels)) for j in range(len(labels))
+             if i != j and matrix[i][j]]
+    return sorted(pairs, key=lambda pair: (-pair[0], pair[1], pair[2]))[:limit]
+
+
 def review_metrics(records):
     """Escalation, automatic-answer, and reviewer-decision rates.
 
