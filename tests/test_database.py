@@ -85,6 +85,23 @@ class DatabaseTests(unittest.TestCase):
                         "card_arrival,Q,A,team,1\n", encoding="utf-8")
         self.assertEqual(len(database.load_faqs_from_csv(path, self.db)), 1)
 
+    def test_reloading_faqs_updates_in_place_and_validates_first(self):
+        path = Path(self.directory.name) / "faqs.csv"
+        header = "intent,question,answer,source,approved\n"
+        path.write_text(header + "card_arrival,Q,Draft,draft,0\n", encoding="utf-8")
+        first = database.load_faqs_from_csv(path, self.db)
+        self.assertIsNone(database.get_faq_by_intent("card_arrival", self.db))
+        path.write_text(header + "card_arrival,Q,Final,reviewer,1\n", encoding="utf-8")
+        self.assertEqual(database.load_faqs_from_csv(path, self.db), first)
+        faq = database.get_faq_by_intent("card_arrival", self.db)
+        self.assertEqual((faq["faq_id"], faq["answer"], faq["source"]),
+                         (first[0], "Final", "reviewer"))
+        path.write_text(header + "card_arrival,Q,Changed,reviewer,0\n"
+                        "card_arrival,Q2,A,reviewer,maybe\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "invalid approved value"):
+            database.load_faqs_from_csv(path, self.db)
+        self.assertEqual(database.get_faq_by_intent("card_arrival", self.db)["answer"], "Final")
+
     def test_pending_reviews_include_faq_evidence(self):
         faq_id = database.add_faq("card_arrival", "FAQ Q", "FAQ A", "team", True, self.db)
         request_id = self.pending_request(faq_id)
