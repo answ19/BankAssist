@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS requests (
     model_name TEXT,
     model_runtime_ms REAL,
     ollama_runtime_ms REAL,
+    review_reason TEXT,
+    ollama_draft TEXT,
     is_test_case INTEGER NOT NULL DEFAULT 0 CHECK (is_test_case IN (0, 1)),
     created_at TEXT NOT NULL
 );
@@ -87,10 +89,12 @@ def require_text(name, value):
 def initialize_database(db_path=DB_PATH):
     with closing(connect(db_path)) as connection, connection:
         connection.executescript(SCHEMA)
-        # Databases created before ollama_runtime_ms existed gain the column here.
+        # Databases created before these columns existed gain them here.
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(requests)")}
-        if "ollama_runtime_ms" not in columns:
-            connection.execute("ALTER TABLE requests ADD COLUMN ollama_runtime_ms REAL")
+        for name, kind in (("ollama_runtime_ms", "REAL"), ("review_reason", "TEXT"),
+                           ("ollama_draft", "TEXT")):
+            if name not in columns:
+                connection.execute("ALTER TABLE requests ADD COLUMN {} {}".format(name, kind))
 
 
 def add_faq(intent, question, answer, source, approved=False, db_path=DB_PATH):
@@ -168,25 +172,29 @@ def get_faq_by_intent(intent, db_path=DB_PATH):
 
 def save_request(query, predicted_intent, confidence_score, faq_id, system_response,
                  status, true_intent=None, model_name=None, model_runtime_ms=None,
-                 ollama_runtime_ms=None, is_test_case=False, db_path=DB_PATH):
+                 ollama_runtime_ms=None, is_test_case=False, db_path=DB_PATH,
+                 review_reason=None, ollama_draft=None):
     """Log one routed request and return its request_id.
 
     model_runtime_ms is classifier prediction time only; ollama_runtime_ms is the
     local LLM response time, kept separate. is_test_case marks hand-entered scores used to exercise the routing code, so
-    they can be kept out of reported model results.
+    they can be kept out of reported model results. review_reason says why a request
+    was sent to review (or why Ollama wording was skipped); ollama_draft keeps a reply
+    the Ollama step wrote but did not send, so the reviewer can see it.
     """
     if status not in REQUEST_STATUSES:
         raise ValueError("Unknown request status: {!r}".format(status))
     values = (require_text("query", query), blank_to_none(predicted_intent),
               confidence_score, faq_id, system_response, status,
               blank_to_none(true_intent), blank_to_none(model_name),
-              model_runtime_ms, ollama_runtime_ms, int(bool(is_test_case)), now())
+              model_runtime_ms, ollama_runtime_ms, blank_to_none(review_reason),
+              blank_to_none(ollama_draft), int(bool(is_test_case)), now())
     with closing(connect(db_path)) as connection, connection:
         cursor = connection.execute(
             "INSERT INTO requests (query, predicted_intent, confidence_score, faq_id, "
             "system_response, status, true_intent, model_name, model_runtime_ms, "
-            "ollama_runtime_ms, is_test_case, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", values)
+            "ollama_runtime_ms, review_reason, ollama_draft, is_test_case, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", values)
         return cursor.lastrowid
 
 

@@ -25,6 +25,9 @@ Python, Google Colab/Jupyter, pandas, Matplotlib, scikit-learn, PyTorch and Hugg
 - Baseline: TF-IDF + Logistic Regression.
 - Proposed deep model: DistilBERT.
   
+Local Ollama answer step
+The classifier's confidence score decides routing (threshold 0.90). When a request may be answered automatically, a local `qwen2.5:3b` model can rewrite the approved FAQ answer for the customer's wording; code checks then send any reply with an invented number, amount or time limit to human review. Off by default; enable with `python pipeline.py --ollama "question"` or `BANKASSIST_USE_OLLAMA=1`. Prompts, checks and test instructions: `docs/prompt_templates.md`.
+
 Project Folders
 - notebooks/: Data analysis and model experiments.
 - src/: Reusable processing, prediction and evaluation code.
