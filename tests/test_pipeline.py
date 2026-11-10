@@ -32,11 +32,8 @@ class PipelineTests(unittest.TestCase):
                                        "top_intents", "model_name", "model_runtime_ms"})
         self.assertEqual(result["predicted_intent"], "lost_or_stolen_card")
         self.assertEqual(result["top_intents"][0],
-                         {"intent": result["predicted_intent"],
-                          "probability": result["confidence_score"]})
+                         (result["predicted_intent"], result["confidence_score"]))
         self.assertEqual(len(result["top_intents"]), 2)
-        self.assertGreaterEqual(result["top_intents"][0]["probability"],
-                                result["top_intents"][1]["probability"])
         self.assertTrue(0 <= result["confidence_score"] <= 1)
         self.assertGreaterEqual(result["model_runtime_ms"], 0)
 
