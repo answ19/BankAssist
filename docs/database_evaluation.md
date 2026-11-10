@@ -100,7 +100,7 @@ integration. A small set of FAQs is reviewed first for the demonstration.
 
 | Item | Choice | Where |
 |---|---|---|
-| Prediction output | `query, predicted_intent, confidence_score, top_intents, model_name, model_runtime_ms` | `classifier.predict` |
+| Prediction output | `query, predicted_intent, confidence_score, top_intents, model_name, model_runtime_ms`; `top_intents` is `[{"intent", "probability"}, ...]` (top three), matching Anuja's predictions file | `classifier.predict` |
 | Confidence score | Largest class probability of TF-IDF + Logistic Regression (`predict_proba`) | `classifier.py` |
 | Threshold | Kept at 0.90; validation evidence in `docs/baseline_results.md` | `routing.CONFIDENCE_THRESHOLD` |
 | FAQ file | 77 drafts, one per intent, all `approved = 0` until a team member reviews them | `data/faq/faq_drafts.csv` |
