@@ -37,8 +37,7 @@ def main(argv=None):
     print("Status: {status}\nPredicted intent: {predicted_intent} "
           "(confidence {confidence_score:.2f})\nResponse: {system_response}".format(**result))
     print("Top intents: {}".format(", ".join(
-        "{} {:.2f}".format(top["intent"], top["probability"])
-        for top in result["top_intents"])))
+        "{} {:.2f}".format(intent, score) for intent, score in result["top_intents"])))
     if result.get("review_reason"):
         print("Note: {}".format(result["review_reason"]))
     return 0
