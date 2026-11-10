@@ -3,10 +3,11 @@
 Trained on data/processed/train.csv only. Hyperparameters are chosen by 5-fold
 cross-validation inside the training split, so the validation split stays unseen.
 
-Prediction output format (provisional shared format, used by routing.route_query):
+Prediction output format (shared with Anuja's baseline, used by routing.route_query):
     {"query", "predicted_intent", "confidence_score", "top_intents",
      "model_name", "model_runtime_ms"}
-confidence_score is the largest class probability from predict_proba.
+confidence_score is the largest class probability from predict_proba; top_intents
+lists the top three as [{"intent": ..., "probability": ...}, ...], highest first.
 
     python classifier.py            # train and save models/baseline.joblib
 """
@@ -87,7 +88,8 @@ def predict(query, model, top_k=3):
         "query": query,
         "predicted_intent": str(ranked[0][0]),
         "confidence_score": float(ranked[0][1]),
-        "top_intents": [(str(intent), float(score)) for intent, score in ranked[:top_k]],
+        "top_intents": [{"intent": str(intent), "probability": float(score)}
+                        for intent, score in ranked[:top_k]],
         "model_name": MODEL_NAME,
         "model_runtime_ms": runtime_ms,
     }

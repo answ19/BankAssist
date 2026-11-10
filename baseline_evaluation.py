@@ -150,7 +150,8 @@ def main():
         for p, true, ok in zip(predictions, labels, correct):
             writer.writerow([p["query"], true, p["predicted_intent"],
                              "{:.6f}".format(p["confidence_score"]), int(ok),
-                             p["top_intents"][1][0], "{:.6f}".format(p["top_intents"][1][1])])
+                             p["top_intents"][1]["intent"],
+                             "{:.6f}".format(p["top_intents"][1]["probability"])])
     report = build_report(model, metrics, sweep, calibration, runtime,
                           evaluation.top_confusions(metrics), len(texts))
     REPORT_PATH.write_text(report, encoding="utf-8")
