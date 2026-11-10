@@ -48,6 +48,13 @@ else:
     st.markdown("**Q:** {}".format(choice["faq_question"]))
     st.markdown("**A:** {}".format(choice["faq_answer"]))
     st.caption("FAQ {} · source: {}".format(choice["faq_id"], choice["faq_source"]))
+if choice.get("review_reason"):
+    st.info("Why this needs review: {}".format(choice["review_reason"]))
+if choice.get("ollama_draft"):
+    st.subheader("Ollama draft (not sent)")
+    st.write(choice["ollama_draft"])
+    st.caption("Written by the local model from the FAQ above, then held back by a safety "
+               "check. Edit starts from the approved FAQ text, not this draft.")
 st.subheader("Current system response")
 st.write(choice["system_response"])
 
