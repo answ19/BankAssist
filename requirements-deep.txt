@@ -1,0 +1,9 @@
+# Extra packages for the DistilBERT experiments (Suraj). The base requirements.txt is unchanged.
+# Install with:  pip install -r requirements.txt -r requirements-deep.txt
+# Versions are left open so Colab's preinstalled GPU build of torch is used; after the first
+# successful full run, copy the versions printed in results/distilbert/run_summary.json here.
+torch
+transformers
+pandas
+matplotlib
+nbformat
