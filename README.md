@@ -39,3 +39,9 @@ Working Guidelines
 Use the same saved data splits and label mapping across models. Fit learned preprocessing only on training data. Reserve the official test set for final evaluation. Record experiment settings and report only verified results.
 Status
 Initial development. Setup instructions and results will be added as working components are completed. The prototype will not access accounts, perform transactions or provide personalized financial advice.
+
+## DistilBERT experiments and EDA (Suraj)
+- `notebooks/01_eda.ipynb`: dataset overview, quality checks, class distribution, query lengths, samples. Summary: `docs/eda_summary.md`; figures: `results/eda/`.
+- `docs/deep_model_plan.md`: DistilBERT architecture, training strategy, resource assessment and risks (plan, not results).
+- `distilbert_classifier.py`, `train_distilbert.py`: same prediction format as `classifier.py`. `python train_distilbert.py --smoke-test` checks the code offline; `--pilot-per-class 10` runs a small pilot; no flag runs the full training. Extra packages: `requirements-deep.txt`.
+- `notebooks/02_distilbert_colab.ipynb`: runs the above on a Colab GPU.
