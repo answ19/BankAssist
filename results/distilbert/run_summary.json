@@ -1,0 +1,98 @@
+{
+  "mode": "FULL RUN",
+  "date": "2026-11-10",
+  "best_epoch": 8,
+  "settings": {
+    "model_name": "distilbert-base-uncased",
+    "epochs": 8,
+    "batch_size": 32,
+    "learning_rate": 5e-05,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "max_length": 64,
+    "patience": 2,
+    "seed": 42,
+    "pilot_per_class": 0,
+    "smoke_test": false
+  },
+  "train_examples": 7999,
+  "validation_examples": 2000,
+  "parameters": 67012685,
+  "device": "cuda",
+  "gpu": "Tesla T4",
+  "peak_gpu_memory_mb": 1437.47119140625,
+  "python": "3.13.16",
+  "torch": "2.14.1+cu130",
+  "train_seconds": 310.39741540399996,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 3.610348059654236,
+      "val_accuracy": 0.6545,
+      "val_macro_f1": 0.5861187576561719,
+      "seconds": 35.20967565000001
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.1587890583276748,
+      "val_accuracy": 0.888,
+      "val_macro_f1": 0.8798990467093516,
+      "seconds": 36.36439824900003
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.39597697454690933,
+      "val_accuracy": 0.8995,
+      "val_macro_f1": 0.901444845039764,
+      "seconds": 39.45250795300001
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.18538910867273808,
+      "val_accuracy": 0.9045,
+      "val_macro_f1": 0.9064287398110203,
+      "seconds": 40.04411281
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.0922344405427575,
+      "val_accuracy": 0.9055,
+      "val_macro_f1": 0.9079257190421112,
+      "seconds": 39.42692174699994
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.04745434208586812,
+      "val_accuracy": 0.9085,
+      "val_macro_f1": 0.911519798900286,
+      "seconds": 39.40757238900005
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.024862464681267737,
+      "val_accuracy": 0.9065,
+      "val_macro_f1": 0.9088674374577921,
+      "seconds": 38.95587007100005
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.018194035675376655,
+      "val_accuracy": 0.9095,
+      "val_macro_f1": 0.9125027934267462,
+      "seconds": 39.71561632600003
+    }
+  ],
+  "truncation_rate_train": 0.0031253906738342293,
+  "p99_token_length": 54,
+  "max_token_length": 93,
+  "accuracy": 0.9095,
+  "macro_f1": 0.9125027934267462,
+  "weighted_f1": 0.910171861914909,
+  "ece": 0.04777200552315672,
+  "single_query_runtime_ms": {
+    "count": 200,
+    "mean_ms": 5.180623955002375,
+    "median_ms": 5.107805000022836,
+    "max_ms": 9.273375000020678
+  }
+}
