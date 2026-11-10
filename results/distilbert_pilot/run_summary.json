@@ -1,0 +1,63 @@
+{
+  "mode": "PILOT (10 examples per intent)",
+  "date": "2026-11-10",
+  "best_epoch": 3,
+  "settings": {
+    "model_name": "distilbert-base-uncased",
+    "epochs": 3,
+    "batch_size": 32,
+    "learning_rate": 5e-05,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "max_length": 64,
+    "patience": 2,
+    "seed": 42,
+    "pilot_per_class": 10,
+    "smoke_test": false
+  },
+  "train_examples": 770,
+  "validation_examples": 2000,
+  "parameters": 67012685,
+  "device": "cuda",
+  "gpu": "Tesla T4",
+  "peak_gpu_memory_mb": 1441.15869140625,
+  "python": "3.13.16",
+  "torch": "2.14.1+cu130",
+  "train_seconds": 17.80097868300004,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 4.342278614044189,
+      "val_accuracy": 0.0705,
+      "val_macro_f1": 0.03964145433552696,
+      "seconds": 5.966359393000005
+    },
+    {
+      "epoch": 2,
+      "train_loss": 4.19895149230957,
+      "val_accuracy": 0.196,
+      "val_macro_f1": 0.15329354638391904,
+      "seconds": 5.430756927999994
+    },
+    {
+      "epoch": 3,
+      "train_loss": 4.013926553726196,
+      "val_accuracy": 0.258,
+      "val_macro_f1": 0.22140275969616108,
+      "seconds": 5.448866322999947
+    }
+  ],
+  "truncation_rate_train": 0.005194805194805195,
+  "p99_token_length": 51,
+  "max_token_length": 87,
+  "accuracy": 0.258,
+  "macro_f1": 0.22140275969616108,
+  "weighted_f1": 0.21595640031130328,
+  "ece": 0.2361872773310934,
+  "single_query_runtime_ms": {
+    "count": 200,
+    "mean_ms": 5.444834139995578,
+    "median_ms": 5.365074499991351,
+    "max_ms": 9.440775000030044
+  }
+}

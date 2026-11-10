@@ -1,6 +1,6 @@
 # DistilBERT deep-model plan (Phase 3)
 
-Owner: Suraj. Status when written: **plan and code only; no DistilBERT training result exists yet.**
+Owner: Suraj. Status when written: **plan written before training. Observed results are in docs/distilbert_results.md.**
 Everything below under "Planned" is a plan, not an observed result. Observed findings come only from
 `notebooks/01_eda.ipynb` and, after it is run, `docs/distilbert_results.md`.
 
@@ -29,7 +29,7 @@ fields (`query`, `predicted_intent`, `confidence_score`, `top_intents`, `model_n
 | Data | `data/processed/train.csv` (7,999) for training; `validation.csv` (2,000) for epoch selection and threshold analysis | Team rule: shared splits; test set reserved |
 | Optimiser | AdamW, learning rate 5e-5, weight decay 0.01 (not on bias/LayerNorm) | Common fine-tuning defaults for this model size |
 | Schedule | Linear decay, 10% warmup | Stabilises early steps |
-| Batch size / epochs | 32 / up to 4 | About 250 steps per epoch |
+| Batch size / epochs | 32 / up to 8 (raised from 4 after the pilot was still improving) | About 250 steps per epoch |
 | Early stopping | Stop after 2 epochs with no validation macro-F1 gain; keep best epoch | Limits overfitting on a small dataset |
 | Seed | 42 | Reproducibility; a few extra seeds if time allows, to show variance |
 | Class weighting | None initially | Imbalance is mild (5.3 to 1); revisit only if per-class F1 shows a problem |
