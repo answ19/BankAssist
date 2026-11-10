@@ -23,7 +23,7 @@ Requests 1-2 are ad-hoc queries routed before any FAQ was approved. Requests 3, 
 
 ## Demo metrics
 
-Eight requests only: these show the workflow end to end and are not a model evaluation (see `docs/baseline_results.md` for the 2,000-query validation results). Classifier time here includes each script's first-call warm-up.
+Eight requests only: these show the workflow end to end and are not a model evaluation (see `docs/baseline_results.md` for the 2,000-query validation results). Classifier time here includes each script's first-call warm-up. FAQ lookup time is measured the same way as `python evaluation.py`: 20 repeated SQLite lookups for each predicted intent.
 
 | Measure | Result | How it is obtained |
 |---|---:|---|
@@ -39,4 +39,4 @@ Eight requests only: these show the workflow end to end and are not a model eval
 | Reviewer agreement | 80.00% | Reviews keeping the predicted intent (n=5) |
 | Average classifier time | 142.7 ms | Mean logged classifier prediction time per query (n=8) |
 | Average Ollama response time | Pending | Mean logged local LLM response time per query (n=0) |
-| Average FAQ lookup time | Pending | Mean SQLite FAQ lookup time (n=0) |
+| Average FAQ lookup time | 2.9 ms | Mean SQLite FAQ lookup time (n=120) |

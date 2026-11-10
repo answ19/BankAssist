@@ -42,6 +42,11 @@ def show(request, position, total):
     else:
         print("Retrieved FAQ {}: Q: {}".format(request["faq_id"], request["faq_question"]))
         print("                  A: {}".format(request["faq_answer"]))
+    if request["review_reason"]:
+        print("Why in review:    {}".format(request["review_reason"]))
+    if request["ollama_draft"]:
+        print("Ollama draft (not sent; held back by a safety check):")
+        print("                  {}".format(request["ollama_draft"]))
     print("System response:  {}".format(request["system_response"]))
 
 
