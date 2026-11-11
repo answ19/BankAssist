@@ -1,23 +1,29 @@
 # Human-review demonstration (real model output)
 
-Exported from `bankassist.db` on 2026-11-03. Every prediction and confidence score comes from the trained baseline (`tfidf-logreg-baseline`); none are hand-entered. Threshold 0.90. Six FAQs were approved for this demo (see `data/faq/faq_drafts.csv`); every other intent goes to review regardless of confidence.
+Exported from `bankassist.db` on 2026-11-10. Every prediction and confidence score comes from the trained baseline (`tfidf-logreg-baseline`); none are hand-entered. Threshold 0.90.
 
-Requests 1-2 are ad-hoc queries routed before any FAQ was approved. Requests 3-8 are the first validation-split query (file order) for each approved intent, logged with their dataset label. Review decisions were made by Claude at Kashish Jethmalani's request through `database.save_review`, the same function the Streamlit screen uses.
+**Who did what.**
 
-| # | Query | Predicted intent | Confidence | True intent | Status | Corrected intent | Reviewer notes |
-|---:|---|---|---:|---|---|---|---|
-| 1 | My card was stolen last night | lost_or_stolen_card | 0.82 | n/a | edited |  | Intent correct (0.82, below threshold). No FAQ was approved when this was routed, so the now-approved lost/stolen card FAQ is sent. |
-| 2 | Which stocks should I buy? | declined_transfer | 0.11 | n/a | rejected |  | Out of scope: investment advice is not a banking intent. Low confidence (0.11) correctly sent it to review. |
-| 3 | I need to report a stolen card | lost_or_stolen_card | 0.89 | lost_or_stolen_card | approved |  | Intent and FAQ correct; confidence 0.89 just below 0.90. |
-| 4 | There's a possibility that my card was compromised. | compromised_card | 0.18 | compromised_card | approved |  | Intent correct despite low confidence (0.18); FAQ fits. |
-| 5 | What do I do if my smart phone was stolen? | lost_or_stolen_phone | 0.97 | lost_or_stolen_phone | answered |  |  |
-| 6 | Can you tell me why I haven't received my new card yet? | card_arrival | 0.81 | card_arrival | approved |  | Intent and FAQ correct; confidence 0.81. |
-| 7 | I want to activate the card. | activate_my_card | 0.98 | activate_my_card | answered |  |  |
-| 8 | Why am I being declined? | declined_transfer | 0.80 | declined_card_payment | edited | declined_card_payment | Predicted declined_transfer is wrong for the dataset label. The query is ambiguous (card or transfer); a live reviewer would ask. Sent the declined card payment FAQ. |
+- **FAQ answers:** the 77 drafts in `data/faq/faq_drafts.csv` were written with AI assistance (Claude). Kashish Jethmalani reviewed and approved six of them for this demo on 2026-11-09. The other 71 are still unapproved drafts, so those intents always go to review regardless of confidence.
+- **Review decisions:** every decision, final response and reviewer note below was entered by Kashish Jethmalani in `review_cli.py`. This terminal version of the review screen was used because the Streamlit page would not open on that laptop. It saves through `database.save_review`, the same function `review_app.py` uses. Claude did not make these decisions.
+- **Earlier version discarded:** the first version of this demo (2026-11-03) used review decisions and FAQ approvals made by Claude. Those were reset and redone by a person, as described above.
+
+Requests 1-2 are ad-hoc queries routed before any FAQ was approved. Requests 3, 4, 6, 8, 9 and 10 are the first validation-split query (file order) for each approved intent, logged with their dataset label. Requests 9 and 10 were re-routed on 2026-11-10 against the human-approved FAQs. They replace requests 5 and 7, which had been routed against the earlier AI-made approvals; the predictions and scores are unchanged.
+
+| # | Query | Predicted intent | Confidence | True intent | Status | Corrected intent | Response sent | Reviewer notes |
+|---:|---|---|---:|---|---|---|---|---|
+| 1 | My card was stolen last night | lost_or_stolen_card | 0.82 | n/a | edited |  | I'm sorry your card was stolen. Please freeze or block your card in the app immediately and contact support. You can also order a replacement card through the app. | The predicted intent (lost_or_stolen_card) is correct with confidence 0.82. However, the system failed to retrieve the relevant approved FAQ 43 for stolen cards. The response has been corrected using the approved FAQ guidance. Recommend improving FAQ retrieval to prevent unnecessary escalation. |
+| 2 | Which stocks should I buy? | declined_transfer | 0.11 | n/a | rejected |  | (none) | Incorrect intent classification. The query is about investment advice, not a declined transfer. Confidence is very low (0.11). This should be classified as out-of-scope or investment advice rather than declined_transfer. |
+| 3 | I need to report a stolen card | lost_or_stolen_card | 0.89 | lost_or_stolen_card | edited |  | I'm sorry your card was stolen. Please freeze or block your card in the app immediately and contact support. You can also order a replacement card through the app. | Intent classification is correct (0.89 confidence). FAQ 43 provides an approved answer, but the system unnecessarily escalated the request instead of using the FAQ guidance. |
+| 4 | There's a possibility that my card was compromised. | compromised_card | 0.18 | compromised_card | edited |  | If you suspect your card has been compromised, please freeze or block it in the app right away and contact support immediately. Support can help you review suspicious transactions and order a replacement card. | The predicted intent (compromised_card) is correct despite the low confidence score (0.18). FAQ 24 provides relevant approved guidance. The system unnecessarily escalated instead of providing the available FAQ answer. Recommend improving intent confidence and FAQ response retrieval. |
+| 6 | Can you tell me why I haven't received my new card yet? | card_arrival | 0.81 | card_arrival | edited |  | You can check the status of your new card order in the app. If your card hasn't arrived by the expected delivery date, please contact support through the app. They can check the delivery status and arrange a replacement if needed. | The predicted intent (card_arrival) is correct with high confidence (0.81). FAQ 13 provides a relevant approved answer, but the system unnecessarily escalated the request. The response should use the approved FAQ guidance instead. |
+| 8 | Why am I being declined? | declined_transfer | 0.80 | declined_card_payment | edited | declined_card_payment | Could you please clarify whether you're referring to a declined card payment or a bank transfer? This will help us assist you with the correct issue. | The predicted intent (declined_transfer) is incorrect. The dataset's actual label is declined_card_payment. Although the query is ambiguous, the corrected intent should reflect the dataset label. No approved FAQ was retrieved, so a clarification response is appropriate. |
+| 9 | What do I do if my smart phone was stolen? | lost_or_stolen_phone | 0.97 | lost_or_stolen_phone | answered |  | If you can, log in to the app from another device and freeze or block your card, then contact support immediately so they can help secure your account. Support can also help you regain access to the app on a new device. |  |
+| 10 | I want to activate the card. | activate_my_card | 0.98 | activate_my_card | answered |  | You can activate your card in the app by following the card activation steps. If activation fails, make sure your app is up to date and try again, then contact support in the app if it still doesn't work. |  |
 
 ## Demo metrics
 
-Eight requests only: these show the workflow end to end and are not a model evaluation (see `docs/baseline_results.md` for the 2,000-query validation results). Classifier time here includes each script's first-call warm-up.
+Eight requests only: these show the workflow end to end and are not a model evaluation (see `docs/baseline_results.md` for the 2,000-query validation results). Classifier time here includes each script's first-call warm-up. FAQ lookup time is measured the same way as `python evaluation.py`: 20 repeated SQLite lookups for each predicted intent.
 
 | Measure | Result | How it is obtained |
 |---|---:|---|
@@ -27,10 +33,10 @@ Eight requests only: these show the workflow end to end and are not a model eval
 | FAQ retrieval accuracy | Pending | Relevant FAQ retrieved for the query (manual check) |
 | Automatic answer rate | 25.00% | Answered requests divided by all requests (n=8) |
 | Escalation rate | 75.00% | Pending-review or reviewed requests divided by all requests |
-| Approval rate | 50.00% | Approved reviews divided by all reviews (n=6) |
-| Edit rate | 33.33% | Edited reviews divided by all reviews |
+| Approval rate | 0.00% | Approved reviews divided by all reviews (n=6) |
+| Edit rate | 83.33% | Edited reviews divided by all reviews |
 | Rejection rate | 16.67% | Rejected reviews divided by all reviews |
 | Reviewer agreement | 80.00% | Reviews keeping the predicted intent (n=5) |
-| Average classifier time | 66.3 ms | Mean logged classifier prediction time per query (n=8) |
+| Average classifier time | 142.7 ms | Mean logged classifier prediction time per query (n=8) |
 | Average Ollama response time | Pending | Mean logged local LLM response time per query (n=0) |
-| Average FAQ lookup time | Pending | Mean SQLite FAQ lookup time (n=0) |
+| Average FAQ lookup time | 2.9 ms | Mean SQLite FAQ lookup time (n=120) |
