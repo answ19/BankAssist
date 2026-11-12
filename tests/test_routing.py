@@ -57,6 +57,26 @@ class RoutingTests(unittest.TestCase):
                                      threshold=0.80, db_path=self.db)
         self.assertEqual(result["status"], "answered")
 
+    def test_review_explanation_marks_low_confidence_as_expected(self):
+        self.route(0.82)
+        pending = database.get_pending_reviews(self.db)[0]
+        self.assertEqual(routing.explain_review(pending, threshold=0.90),
+                         "confidence 0.82 below threshold 0.90 "
+                         "(expected under the routing policy, not an error)")
+
+    def test_review_explanation_for_rows_without_saved_reason(self):
+        old_row = {"review_reason": None, "predicted_intent": "card_arrival",
+                   "faq_id": None, "confidence_score": 0.82}
+        self.assertEqual(routing.explain_review(old_row, threshold=0.90),
+                         "no approved FAQ for card_arrival at routing time; "
+                         "confidence 0.82 below threshold 0.90 "
+                         "(expected under the routing policy, not an error)")
+        old_row.update(faq_id=13, confidence_score=0.89)
+        self.assertTrue(routing.explain_review(old_row, threshold=0.90)
+                        .startswith("confidence 0.89 below threshold 0.90"))
+        self.assertEqual(routing.explain_review({"review_reason": "Ollama check: x"}),
+                         "Ollama check: x")
+
     def test_invalid_scores_are_rejected_without_saving(self):
         for score in (1.2, -0.1, float("nan"), "0.95", True, None):
             with self.subTest(score=score), self.assertRaises(ValueError):
