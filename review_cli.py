@@ -1,4 +1,4 @@
-"""Terminal version of the review screen, for when the Streamlit page cannot open.
+"""Terminal version of the review screen, an alternative to the Streamlit page.
 
 Shows each pending request with its FAQ evidence and saves the reviewer's
 decision through database.save_review, the same function review_app.py uses.

@@ -5,7 +5,7 @@ Exported from `bankassist.db` on 2026-11-10. Every prediction and confidence sco
 **Who did what.**
 
 - **FAQ answers:** the 77 drafts in `data/faq/faq_drafts.csv` are drafts for team review. Kashish Jethmalani reviewed and approved six of them for this demo on 2026-11-09. The other 71 are still unapproved drafts, so those intents always go to review regardless of confidence.
-- **Review decisions:** every decision, final response and reviewer note below was entered by Kashish Jethmalani in `review_cli.py`. This terminal version of the review screen was used because the Streamlit page would not open on that laptop. It saves through `database.save_review`, the same function `review_app.py` uses.
+- **Review decisions:** every decision, final response and reviewer note below was entered by Kashish Jethmalani in `review_cli.py`, the terminal version of the review screen. It saves through `database.save_review`, the same function `review_app.py` uses.
 
 Requests 1-2 are ad-hoc queries routed before any FAQ was approved. Requests 3, 4, 6, 8, 9 and 10 are the first validation-split query (file order) for each approved intent, logged with their dataset label. Requests 9 and 10 were re-routed on 2026-11-10 against the human-approved FAQs. They replace requests 5 and 7, which had been routed before these approvals were made; the predictions and scores are unchanged.
 
