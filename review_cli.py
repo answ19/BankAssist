@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 import database
+import routing
 
 
 ROOT = Path(__file__).resolve().parent
@@ -38,12 +39,14 @@ def show(request, position, total):
     score = request["confidence_score"]
     print("Confidence score: {}".format("None" if score is None else "{:.2f}".format(score)))
     if request["faq_id"] is None:
-        print("Retrieved FAQ:    none (no approved FAQ for the predicted intent)")
+        print("Approved FAQ:     none for the predicted intent")
     else:
-        print("Retrieved FAQ {}: Q: {}".format(request["faq_id"], request["faq_question"]))
+        print("Approved FAQ {} for this intent (held back, not sent):".format(request["faq_id"]))
+        print("                  Q: {}".format(request["faq_question"]))
         print("                  A: {}".format(request["faq_answer"]))
-    if request["review_reason"]:
-        print("Why in review:    {}".format(request["review_reason"]))
+    reason = routing.explain_review(request)
+    if reason:
+        print("Why in review:    {}".format(reason))
     if request["ollama_draft"]:
         print("Ollama draft (not sent; held back by a safety check):")
         print("                  {}".format(request["ollama_draft"]))

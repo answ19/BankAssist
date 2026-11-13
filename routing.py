@@ -31,6 +31,34 @@ def check_probability(name, value):
     return float(value)
 
 
+def explain_review(request, threshold=None):
+    """Return a reviewer-facing sentence on why a pending request is in review.
+
+    Uses the saved review_reason when there is one. Requests logged before that
+    column existed have none, so the reason is worked out from the saved fields:
+    faq_id is empty when no approved FAQ existed at routing time, and the
+    confidence is compared with the threshold (the current setting, 0.90 by
+    default). Escalation below the threshold is the configured policy, so it is
+    labelled as expected rather than as an error.
+    """
+    threshold = CONFIDENCE_THRESHOLD if threshold is None else threshold
+    expected = " (expected under the routing policy, not an error)"
+    reason = request.get("review_reason")
+    if reason:
+        return reason + expected if reason.startswith("confidence ") else reason
+    if not request.get("predicted_intent"):
+        return "no predicted intent"
+    reasons = []
+    if request.get("faq_id") is None:
+        reasons.append("no approved FAQ for {} at routing time".format(
+            request["predicted_intent"]))
+    score = request.get("confidence_score")
+    if score is not None and score < threshold:
+        reasons.append("confidence {:.2f} below threshold {:.2f}{}".format(
+            score, threshold, expected))
+    return "; ".join(reasons) or None
+
+
 def route_query(query, predicted_intent, confidence_score, threshold=None,
                 true_intent=None, model_name=None, model_runtime_ms=None,
                 ollama_runtime_ms=None, is_test_case=False, db_path=database.DB_PATH,

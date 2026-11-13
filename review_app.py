@@ -10,6 +10,7 @@ import os
 import streamlit as st
 
 import database
+import routing
 
 
 DB_PATH = os.environ.get("BANKASSIST_DB_PATH", str(database.DB_PATH))
@@ -41,15 +42,16 @@ left.metric("Predicted intent", choice["predicted_intent"] or "None")
 right.metric("Confidence score", "{:.2f}".format(choice["confidence_score"])
              if choice["confidence_score"] is not None else "None")
 
-st.subheader("Retrieved FAQ")
+st.subheader("Approved FAQ for this intent (held back, not sent)")
 if choice["faq_id"] is None:
     st.write("No approved FAQ exists for the predicted intent.")
 else:
     st.markdown("**Q:** {}".format(choice["faq_question"]))
     st.markdown("**A:** {}".format(choice["faq_answer"]))
     st.caption("FAQ {} · source: {}".format(choice["faq_id"], choice["faq_source"]))
-if choice.get("review_reason"):
-    st.info("Why this needs review: {}".format(choice["review_reason"]))
+reason = routing.explain_review(choice)
+if reason:
+    st.info("Why this needs review: {}".format(reason))
 if choice.get("ollama_draft"):
     st.subheader("Ollama draft (not sent)")
     st.write(choice["ollama_draft"])
